@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaLens · AI Fish Identifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- Animated water background -->
+<div class="water-bg">
+  <div class="wave wave1"></div>
+  <div class="wave wave2"></div>
+  <div class="wave wave3"></div>
+  <div class="bubbles" id="bubbles"></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🐟</span>
+      <span class="logo-text">Aqua<em>Lens</em></span>
+    </div>
+    <div class="header-right">
+      <div class="location-pill" id="locationPill">
+        <span class="loc-icon">📍</span>
+        <span id="locationText">Detecting location...</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Weather Bar -->
+<div class="weather-bar" id="weatherBar" style="display:none">
+  <div class="weather-inner">
+    <div class="weather-item"><span id="wIcon">🌤</span><span id="wDesc">—</span></div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span>🌡</span><span id="wTemp">—</span></div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span>💨</span><span id="wWind">—</span></div>
+    <div class="weather-divider"></div>
+    <div class="weather-item"><span>🧭</span><span id="wDir">—</span></div>
+  </div>
+</div>
+
+<!-- Hero -->
+<main class="main">
+  <section class="hero">
+    <h1 class="hero-title">Identify Any Fish <em>Instantly</em></h1>
+    <p class="hero-sub">Powered by AI vision + your trained model · Works anywhere in the world</p>
+  </section>
+
+  <!-- Upload Card -->
+  <section class="upload-section">
+    <div class="upload-card" id="uploadCard">
+
+      <!-- Preview area -->
+      <div class="preview-area" id="previewArea">
+        <div class="preview-placeholder" id="placeholder">
+          <div class="fish-icon-anim">🐠</div>
+          <p class="placeholder-title">Drop your fish photo here</p>
+          <p class="placeholder-sub">or choose an option below</p>
+        </div>
+        <img id="previewImg" class="preview-img" style="display:none" alt="Preview">
+        <div class="preview-overlay" id="previewOverlay" style="display:none">
+          <button class="change-btn" onclick="resetUpload()">✕ Change Image</button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="action-row">
+        <label class="action-btn btn-upload" for="fileInput">
+          <span class="btn-icon">📁</span>
+          <span>Upload Photo</span>
+          <input type="file" id="fileInput" accept="image/*" style="display:none">
+        </label>
+
+        <button class="action-btn btn-camera" id="cameraBtn" onclick="startCamera()">
+          <span class="btn-icon">📷</span>
+          <span>Use Camera</span>
+        </button>
+
+        <button class="action-btn btn-identify" id="identifyBtn" onclick="identifyFish()" disabled>
+          <span class="btn-icon">🔍</span>
+          <span>Identify Fish</span>
+        </button>
+      </div>
+
+      <!-- Drag and drop overlay -->
+      <div class="drop-overlay" id="dropOverlay">
+        <p>📸 Drop to identify!</p>
+      </div>
+    </div>
+
+    <!-- Camera modal -->
+    <div class="camera-modal" id="cameraModal" style="display:none">
+      <div class="camera-inner">
+        <h3 class="camera-title">📷 Camera Capture</h3>
+        <div class="video-wrap">
+          <video id="videoEl" autoplay playsinline></video>
+          <div class="camera-frame"></div>
+        </div>
+        <div class="camera-controls">
+          <button class="cam-btn cam-flip" onclick="flipCamera()">🔄 Flip</button>
+          <button class="cam-btn cam-shoot" onclick="capturePhoto()">📸 Capture</button>
+          <button class="cam-btn cam-cancel" onclick="stopCamera()">✕ Cancel</button>
+        </div>
+        <canvas id="captureCanvas" style="display:none"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div class="loading-state" id="loadingState" style="display:none">
+    <div class="sonar-ring"></div>
+    <div class="loading-fish">🐟</div>
+    <p class="loading-text">Scanning the deep...</p>
+    <div class="loading-steps" id="loadingSteps">
+      <div class="step active">🔬 Analyzing image</div>
+      <div class="step">🌍 Checking location</div>
+      <div class="step">🧬 Matching species</div>
+      <div class="step">📚 Gathering facts</div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <section class="results-section" id="resultsSection" style="display:none">
+    <div class="results-card">
+
+      <!-- Species Header -->
+      <div class="species-header">
+        <div class="confidence-badge" id="confidenceBadge">
+          <span id="confidenceValue">0</span>%
+          <span class="conf-label">match</span>
+        </div>
+        <div class="species-names">
+          <h2 class="species-common" id="speciesCommon">—</h2>
+          <p class="species-scientific" id="speciesScientific">—</p>
+        </div>
+        <div class="species-tags" id="speciesTags"></div>
+      </div>
+
+      <!-- Image + Quick Stats -->
+      <div class="results-top-grid">
+        <div class="result-image-wrap">
+          <img id="resultImg" alt="Identified fish">
+          <div class="img-badge" id="regionBadge" style="display:none">📍 Found in your region</div>
+        </div>
+        <div class="quick-stats">
+          <div class="stat-item">
+            <span class="stat-icon">🏠</span>
+            <div><span class="stat-label">Habitat</span><span class="stat-value" id="statHabitat">—</span></div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">📏</span>
+            <div><span class="stat-label">Size Range</span><span class="stat-value" id="statSize">—</span></div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🍽</span>
+            <div><span class="stat-label">Diet</span><span class="stat-value" id="statDiet">—</span></div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🌿</span>
+            <div><span class="stat-label">Conservation</span><span class="stat-value" id="statConservation">—</span></div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🍴</span>
+            <div><span class="stat-label">Edible</span><span class="stat-value" id="statEdible">—</span></div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">🔬</span>
+            <div><span class="stat-label">Family</span><span class="stat-value" id="statFamily">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features + Facts -->
+      <div class="details-grid">
+        <div class="detail-block">
+          <h4 class="detail-title">🔑 Identification Features</h4>
+          <ul class="feature-list" id="featureList"></ul>
+        </div>
+        <div class="detail-block">
+          <h4 class="detail-title">✨ Interesting Facts</h4>
+          <ul class="facts-list" id="factsList"></ul>
+        </div>
+      </div>
+
+      <!-- Culinary / Warning -->
+      <div class="bottom-notes" id="bottomNotes"></div>
+
+      <!-- Location + Weather Context -->
+      <div class="context-bar" id="contextBar" style="display:none">
+        <div class="context-item"><span>📍</span><span id="ctxLocation">—</span></div>
+        <div class="context-item"><span>🌤</span><span id="ctxWeather">—</span></div>
+        <div class="context-item"><span>🌡</span><span id="ctxTemp">—</span></div>
+      </div>
+
+      <!-- New Scan Button -->
+      <div class="new-scan-wrap">
+        <button class="new-scan-btn" onclick="resetAll()">🔄 Identify Another Fish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error State -->
+  <div class="error-state" id="errorState" style="display:none">
+    <div class="error-card">
+      <span class="error-icon">🐡</span>
+      <h3>Oops! Something went wrong</h3>
+      <p id="errorMsg">Unable to identify the fish. Please try again.</p>
+      <button class="retry-btn" onclick="resetAll()">Try Again</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>🐟 AquaLens · AI Fish Identification · Powered by Claude Vision + TFLite</p>
+</footer>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

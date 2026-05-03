@@ -1,0 +1,18 @@
+flask==3.0.3
+Pillow>=10.0.0
+requests>=2.31.0
+werkzeug>=3.0.0
+numpy>=1.24.0
+
+# ── AI Vision (FREE - no credit card)
+# Groq API: 14,400 req/day, 30 req/min, vision supported
+# No extra package needed — uses plain HTTP requests
+# Get key: https://console.groq.com/keys
+
+# ── Weather & Geocoding (FREE, no key needed)
+# Open-Meteo  → https://open-meteo.com
+# Nominatim   → https://nominatim.openstreetmap.org
+
+# ── TFLite support (optional, uncomment one)
+# tflite-runtime>=2.13.0
+# tensorflow>=2.13.0
